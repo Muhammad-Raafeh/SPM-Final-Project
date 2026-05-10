@@ -298,30 +298,6 @@
     </div>
 </section>
 
-<script>
-    document.getElementById('contactForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const name  = document.getElementById('fname').value.trim();
-        const email = document.getElementById('femail').value.trim();
-        const msg   = document.getElementById('fmsg').value.trim();
-        const re    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        let valid   = true;
-
-        ['nameErr','emailErr','msgErr'].forEach(id =>
-            document.getElementById(id).textContent = '');
-
-        if (!name)          { document.getElementById('nameErr').textContent  = 'Name is required.'; valid = false; }
-        if (!email)         { document.getElementById('emailErr').textContent = 'Email is required.'; valid = false; }
-        else if (!re.test(email)) { document.getElementById('emailErr').textContent = 'Invalid email format.'; valid = false; }
-        if (!msg)           { document.getElementById('msgErr').textContent   = 'Message is required.'; valid = false; }
-
-        if (valid) {
-            document.getElementById('contactForm').style.display = 'none';
-            document.getElementById('successBox').style.display  = 'flex';
-        }
-    });
-</script>
-
 <footer class="footer">
     <div class="container">
         <div class="footer-inner">
@@ -373,6 +349,30 @@
 
     </div>
 </footer>
+
+<script>
+    document.getElementById('contactForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name  = document.getElementById('fname').value.trim();
+        const email = document.getElementById('femail').value.trim();
+        const msg   = document.getElementById('fmsg').value.trim();
+        const re    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        let valid   = true;
+
+        ['nameErr','emailErr','msgErr'].forEach(id =>
+            document.getElementById(id).textContent = '');
+
+        if (!name)          { document.getElementById('nameErr').textContent  = 'Name is required.'; valid = false; }
+        if (!email)         { document.getElementById('emailErr').textContent = 'Email is required.'; valid = false; }
+        else if (!re.test(email)) { document.getElementById('emailErr').textContent = 'Invalid email format.'; valid = false; }
+        if (!msg)           { document.getElementById('msgErr').textContent   = 'Message is required.'; valid = false; }
+
+        if (valid) {
+            document.getElementById('contactForm').style.display = 'none';
+            document.getElementById('successBox').style.display  = 'flex';
+        }
+    });
+</script>
 
 </body>
 </html>
