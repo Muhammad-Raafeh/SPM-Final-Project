@@ -1,0 +1,73 @@
+name: QuickPOS CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'bugfix/**'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  code-quality:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stage 1 - Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Stage 2 - Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Stage 3 - Install CodeSniffer
+        run: composer global require "squizlabs/php_codesniffer=*"
+
+      - name: Stage 3 - Run CodeSniffer
+        run: phpcs --standard=PSR12 --extensions=php --ignore=vendor index.php thankyou.php || true
+
+  automated-tests:
+    name: Automated Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stage 1 - Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Stage 2 - Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Stage 5 - Syntax Check
+        run: |
+          php -l index.php
+          php -l thankyou.php
+          php -l tests/FormTest.php
+
+      - name: Stage 10 - Validate Jira Commit Message
+        if: github.event_name == 'push'
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MSG"
+          if echo "$COMMIT_MSG" | grep -qE '\[PROJ-[0-9]+\]'; then
+            echo "✅ Valid Jira commit message found!"
+          else
+            echo "❌ ERROR: No Jira ticket ID found!"
+            exit 1
+          fi
+
+      - name: Stage 4 - Run Automated Tests
+        run: php tests/FormTest.php
+
+      - name: Stage 6 - Upload Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: quickpos-build
+          path: |
+            index.php
+            style.css
+            thankyou.php
+            tests/
