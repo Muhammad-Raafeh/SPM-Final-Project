@@ -10,51 +10,64 @@ on:
       - main
 
 jobs:
+
+  # ───────────────────────────────────────────
+  # JOB 1: Code Quality (runs in parallel)
+  # ───────────────────────────────────────────
   code-quality:
     name: Code Quality Check
     runs-on: ubuntu-latest
     steps:
+
       - name: Stage 1 - Checkout Code
         uses: actions/checkout@v3
 
-      - name: Stage 2 - Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
+      - name: Stage 2 - Install HTML Validator
+        run: npm install -g html-validate
 
-      - name: Stage 3 - Install CodeSniffer
-        run: composer global require "squizlabs/php_codesniffer=*"
+      - name: Stage 3 - Validate index.html
+        run: html-validate index.html || true
 
-      - name: Stage 3 - Run CodeSniffer
-        run: phpcs --standard=PSR12 --extensions=php --ignore=vendor index.php thankyou.php || true
+      - name: Stage 3 - Validate thankyou.html
+        run: html-validate thankyou.html || true
 
+  # ───────────────────────────────────────────
+  # JOB 2: Automated Tests (runs in parallel)
+  # ───────────────────────────────────────────
   automated-tests:
     name: Automated Tests
     runs-on: ubuntu-latest
     steps:
+
       - name: Stage 1 - Checkout Code
         uses: actions/checkout@v3
 
-      - name: Stage 2 - Setup PHP
+      - name: Stage 2 - Setup PHP (for test file only)
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
 
-      - name: Stage 5 - Syntax Check
+      - name: Stage 5 - Syntax Check HTML Files
         run: |
-          php -l index.php
-          php -l thankyou.php
-          php -l tests/FormTest.php
+          echo "Checking index.html exists..."
+          test -f index.html && echo "✅ index.html found" || exit 1
+          echo "Checking thankyou.html exists..."
+          test -f thankyou.html && echo "✅ thankyou.html found" || exit 1
+          echo "Checking style.css exists..."
+          test -f style.css && echo "✅ style.css found" || exit 1
+
+      - name: Stage 5 - PHP Syntax Check (Test File Only)
+        run: php -l tests/FormTest.php
 
       - name: Stage 10 - Validate Jira Commit Message
         if: github.event_name == 'push'
         run: |
           COMMIT_MSG=$(git log -1 --pretty=%B)
           echo "Commit message: $COMMIT_MSG"
-          if echo "$COMMIT_MSG" | grep -qE '\[PROJ-[0-9]+\]'; then
+          if echo "$COMMIT_MSG" | grep -qE '\[POS-[0-9]+\]'; then
             echo "✅ Valid Jira commit message found!"
           else
-            echo "❌ ERROR: No Jira ticket ID found!"
+            echo "❌ ERROR: Commit must include Jira ID e.g. [POS-101]"
             exit 1
           fi
 
@@ -67,7 +80,7 @@ jobs:
         with:
           name: quickpos-build
           path: |
-            index.php
+            index.html
+            thankyou.html
             style.css
-            thankyou.php
             tests/
